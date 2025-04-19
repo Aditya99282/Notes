@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>खर्च आणि उधार व्यवस्थापक</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .summary-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #ddd;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .return-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .status-pending {
+            color: #e67e22;
+            font-weight: bold;
+        }
+        .status-returned {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .price-input-container {
+            display: flex;
+            align-items: center;
+        }
+        .price-input-container input {
+            flex: 1;
+            margin-right: 5px;
+        }
+        .price-input-container span {
+            font-weight: bold;
+        }
+        .multi-select-container {
+            display: flex;
+            align-items: center;
+        }
+        .multi-select-container select {
+            flex: 1;
+            margin-right: 5px;
+        }
+        .add-name-btn {
+            width: auto;
+            padding: 10px;
+        }
+        .names-list {
+            margin-top: 10px;
+        }
+        .name-tag {
+            display: inline-block;
+            background: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .name-tag button {
+            background: none;
+            border: none;
+            color: #666;
+            padding: 0 5px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>खर्च आणि उधार व्यवस्थापक</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="openTab('expenses')">खर्च नोंद</div>
+            <div class="tab" onclick="openTab('loans')">उधार नोंद</div>
+            <div class="tab" onclick="openTab('records')">नोंदी पहा</div>
+            <div class="tab" onclick="openTab('summary')">सारांश</div>
+        </div>
+        
+        <!-- खर्च नोंदणी फॉर्म -->
+        <div id="expenses" class="tab-content active">
+            <h2>खर्च नोंदवा</h2>
+            <form id="expense-form">
+                <div class="form-group">
+                    <label for="expense-item">वस्तूचे नाव</label>
+                    <input type="text" id="expense-item" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expense-price">किंमत (₹)</label>
+                    <div class="price-input-container">
+                        <input type="text" id="expense-price" placeholder="उदा. 20+30+40" required>
+                        <span id="expense-total">Total: ₹0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>कोणी खरेदी केली</label>
+                    <div class="multi-select-container">
+                        <select id="person-select">
+                            <option value="">निवडा</option>
+                            <option value="दुकानदार">दुकानदार</option>
+                            <option value="आई">आई</option>
+                            <option value="वडील">वडील</option>
+                            <option value="मुलगा">मुलगा</option>
+                            <option value="मुलगी">मुलगी</option>
+                            <option value="आजी">आजी</option>
+                            <option value="आजोबा">आजोबा</option>
+                            <option value="other">इतर</option>
+                        </select>
+                        <button type="button" class="add-name-btn" onclick="addPerson()">+</button>
+                    </div>
+                    <div class="names-list" id="selected-persons"></div>
+                    <input type="hidden" id="expense-persons">
+                </div>
+                
+                <div class="form-group">
+                    <label for="expense-date">तारीख</label>
+                    <input type="date" id="expense-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expense-notes">नोंद (जर लागू असेल तर)</label>
+                    <textarea id="expense-notes" rows="2"></textarea>
+                </div>
+                
+                <button type="submit">जमा करा</button>
+            </form>
+        </div>
+        
+        <!-- उधार नोंदणी फॉर्म -->
+        <div id="loans" class="tab-content">
+            <h2>उधार नोंदवा</h2>
+            <form id="loan-form">
+                <div class="form-group">
+                    <label for="loan-type">प्रकार</label>
+                    <select id="loan-type" required>
+                        <option value="">निवडा</option>
+                        <option value="दिले">आम्ही दिले (उधार)</option>
+                        <option value="घेतले">आम्ही घेतले (कर्ज)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-item">वस्तू (जर लागू असेल तर)</label>
+                    <input type="text" id="loan-item">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-amount">रक्कम (₹)</label>
+                    <div class="price-input-container">
+                        <input type="text" id="loan-amount" placeholder="उदा. 20+30+40" required>
+                        <span id="loan-total">Total: ₹0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-person">व्यक्ती/दुकान</label>
+                    <input type="text" id="loan-person" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-date">तारीख</label>
+                    <input type="date" id="loan-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-notes">नोंद</label>
+                    <textarea id="loan-notes" rows="3"></textarea>
+                </div>
+                
+                <button type="submit">जमा करा</button>
+            </form>
+        </div>
+        
+        <!-- सर्व नोंदी पहाण्यासाठी -->
+        <div id="records" class="tab-content">
+            <h2>सर्व नोंदी</h2>
+            <div class="form-group">
+                <label for="record-type">नोंदीचा प्रकार</label>
+                <select id="record-type" onchange="filterRecords()">
+                    <option value="all">सर्व नोंदी</option>
+                    <option value="expense">फक्त खर्च</option>
+                    <option value="loan">फक्त उधार/कर्ज</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="filter-date">तारीख निवडा</label>
+                <input type="date" id="filter-date" onchange="filterRecords()">
+                <button onclick="clearFilter()" style="width: auto; display: inline-block; margin-left: 5px;">सर्व नोंदी दाखवा</button>
+            </div>
+            
+            <table id="records-table">
+                <thead>
+                    <tr>
+                        <th>तारीख</th>
+                        <th>प्रकार</th>
+                        <th>विवरण</th>
+                        <th>रक्कम</th>
+                        <th>स्थिती</th>
+                        <th>क्रिया</th>
+                    </tr>
+                </thead>
+                <tbody id="records-list">
+                    <!-- येथे JavaScript मधील डेटा येईल -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- सारांश -->
+        <div id="summary" class="tab-content">
+            <h2>सारांश</h2>
+            
+            <div class="summary-card">
+                <h3>आजचा एकूण खर्च: ₹<span id="today-total">0</span></h3>
+            </div>
+            
+            <div class="summary-card">
+                <h3>व्यक्तीनुसार खर्च</h3>
+                <div id="person-chart">
+                    <ul id="person-list"></ul>
+                </div>
+            </div>
+            
+            <div class="summary-card">
+                <h3>उधार/कर्ज सारांश</h3>
+                <div id="loans-summary">
+                    <p>दिलेले उधार: ₹<span id="given-loans-total">0</span></p>
+                    <p>घेतलेले कर्ज: ₹<span id="taken-loans-total">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // पेज लोड झाल्यावर डेटा लोड करा
+        document.addEventListener('DOMContentLoaded', function() {
+            // आजची तारीख सेट करा
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('expense-date').value = today;
+            document.getElementById('loan-date').value = today;
+            
+            // किंमत कॅल्क्युलेटर इव्हेंट
+            document.getElementById('expense-price').addEventListener('input', calculateExpenseTotal);
+            document.getElementById('loan-amount').addEventListener('input', calculateLoanTotal);
+            
+            // फॉर्म सबमिशन
+            document.getElementById('expense-form').addEventListener('submit', saveExpense);
+            document.getElementById('loan-form').addEventListener('submit', saveLoan);
+            
+            // डेटा लोड करा
+            filterRecords();
+            updateSummary();
+        });
+
+        // टॅब बदलण्यासाठी फंक्शन
+        function openTab(tabId) {
+            // सर्व टॅब कंटेंट लपवा
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // सर्व टॅब इनॅक्टिव्ह करा
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // निवडलेला टॅब आणि कंटेंट सक्रिय करा
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            // जर नोंदी टॅब असेल तर डेटा रिफ्रेश करा
+            if(tabId === 'records') {
+                filterRecords();
+            }
+            
+            // जर सारांश टॅब असेल तर सारांश अपडेट करा
+            if(tabId === 'summary') {
+                updateSummary();
+            }
+        }
+        
+        // खर्चाची एकूण रक्कम कॅल्क्युलेट करा
+        function calculateExpenseTotal() {
+            const priceInput = document.getElementById('expense-price').value;
+            try {
+                const total = eval(priceInput.replace(/[^0-9+]/g, ''));
+                document.getElementById('expense-total').textContent = `Total: ₹${isNaN(total) ? '0' : total}`;
+            } catch {
+                document.getElementById('expense-total').textContent = 'Total: ₹0';
+            }
+        }
+        
+        // उधाराची एकूण रक्कम कॅल्क्युलेट करा
+        function calculateLoanTotal() {
+            const amountInput = document.getElementById('loan-amount').value;
+            try {
+                const total = eval(amountInput.replace(/[^0-9+]/g, ''));
+                document.getElementById('loan-total').textContent = `Total: ₹${isNaN(total) ? '0' : total}`;
+            } catch {
+                document.getElementById('loan-total').textContent = 'Total: ₹0';
+            }
+        }
+        
+        // व्यक्ती जोडा
+        function addPerson() {
+            const select = document.getElementById('person-select');
+            const selectedValue = select.value;
+            
+            if (!selectedValue) return;
+            
+            let personName = selectedValue;
+            if (selectedValue === 'other') {
+                personName = prompt('व्यक्तीचे नाव टाका:');
+                if (!personName) return;
+            }
+            
+            const personsList = document.getElementById('selected-persons');
+            const nameTag = document.createElement('span');
+            nameTag.className = 'name-tag';
+            nameTag.innerHTML = `
+                ${personName}
+                <button type="button" onclick="removePerson(this)">×</button>
+            `;
+            personsList.appendChild(nameTag);
+            
+            updatePersonsHiddenField();
+        }
+        
+        // व्यक्ती काढा
+        function removePerson(button) {
+            button.parentElement.remove();
+            updatePersonsHiddenField();
+        }
+        
+        // हिडन फील्ड अपडेट करा
+        function updatePersonsHiddenField() {
+            const persons = [];
+            document.querySelectorAll('.name-tag').forEach(tag => {
+                persons.push(tag.textContent.replace('×', '').trim());
+            });
+            document.getElementById('expense-persons').value = persons.join(', ');
+        }
+        
+        // खर्च जमा करा
+        function saveExpense(e) {
+            e.preventDefault();
+            
+            const item = document.getElementById('expense-item').value;
+            const priceInput = document.getElementById('expense-price').value;
+            const persons = document.getElementById('expense-persons').value;
+            const date = document.getElementById('expense-date').value;
+            const notes = document.getElementById('expense-notes').value;
+            
+            // किंमत कॅल्क्युलेट करा
+            let total = 0;
+            try {
+                total = eval(priceInput.replace(/[^0-9+]/g, ''));
+                if (isNaN(total)) {
+                    alert('कृपया वैध किंमत टाका (उदा. 20+30+40)');
+                    return;
+                }
+            } catch {
+                alert('कृपया वैध किंमत टाका (उदा. 20+30+40)');
+                return;
+            }
+            
+            if (!persons) {
+                alert('कृपया किमान एक व्यक्ती निवडा');
+                return;
+            }
+            
+            // नवीन खर्च तयार करा
+            const newExpense = {
+                type: 'expense',
+                item,
+                price: total,
+                persons,
+                date,
+                notes,
+                timestamp: new Date().getTime()
+            };
+            
+            // localStorage मध्ये जोडा
+            let records = JSON.parse(localStorage.getItem('records')) || [];
+            records.push(newExpense);
+            localStorage.setItem('records', JSON.stringify(records));
+            
+            // फॉर्म रीसेट
+            document.getElementById('expense-form').reset();
+            document.getElementById('selected-persons').innerHTML = '';
+            document.getElementById('expense-total').textContent = 'Total: ₹0';
+            
+            // आजची तारीख सेट करा
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('expense-date').value = today;
+            
+            // सूचना दाखवा
+            alert('खर्च यशस्वीरित्या जमा झाला!');
+            
+            // डेटा अपडेट करा
+            filterRecords();
+            updateSummary();
+        }
+        
+        // उधार जमा करा
+        function saveLoan(e) {
+            e.preventDefault();
+            
+            const loanType = document.getElementById('loan-type').value;
+            const item = document.getElementById('loan-item').value;
+            const amountInput = document.getElementById('loan-amount').value;
+            const person = document.getElementById('loan-person').value;
+            const date = document.getElementById('loan-date').value;
+            const notes = document.getElementById('loan-notes').value;
+            
+            // रक्कम कॅल्क्युलेट करा
+            let total = 0;
+            try {
+                total = eval(amountInput.replace(/[^0-9+]/g, ''));
+                if (isNaN(total)) {
+                    alert('कृपया वैध रक्कम टाका (उदा. 20+30+40)');
+                    return;
+                }
+            } catch {
+                alert('कृपया वैध रक्कम टाका (उदा. 20+30+40)');
+                return;
+            }
+            
+            // नवीन उधार तयार करा
+            const newLoan = {
+                type: 'loan',
+                loanType,
+                item,
+                amount: total,
+                person,
+                date,
+                notes,
+                returned: false,
+                timestamp: new Date().getTime()
+            };
+            
+            // localStorage मध्ये जोडा
+            let records = JSON.parse(localStorage.getItem('records')) || [];
+            records.push(newLoan);
+            localStorage.setItem('records', JSON.stringify(records));
+            
+            // फॉर्म रीसेट
+            document.getElementById('loan-form').reset();
+            document.getElementById('loan-total').textContent = 'Total: ₹0';
+            
+            // आजची तारीख सेट करा
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('loan-date').value = today;
+            
+            // सूचना दाखवा
+            alert('उधार यशस्वीरित्या जमा झाले!');
+            
+            // डेटा अपडेट करा
+            filterRecords();
+            updateSummary();
+        }
+        
+        // नोंदी फिल्टर करा
+        function filterRecords() {
+            const filterType = document.getElementById('record-type').value;
+            const filterDate = document.getElementById('filter-date').value;
+            
+            let records = JSON.parse(localStorage.getItem('records')) || [];
+            
+            // तारीखीनुसार फिल्टर
+            if (filterDate) {
+                records = records.filter(record => record.date === filterDate);
+            }
+            
+            // प्रकारानुसार फिल्टर
+            if (filterType === 'expense') {
+                records = records.filter(record => record.type === 'expense');
+            } else if (filterType === 'loan') {
+                records = records.filter(record => record.type === 'loan');
+            }
+            
+            // नोंदी दाखवा
+            displayRecords(records);
+        }
+        
+        // नोंदी दाखवा
+        function displayRecords(records) {
+            const recordsList = document.getElementById('records-list');
+            recordsList.innerHTML = '';
+            
+            // तारीखेनुसार सॉर्ट करा (नवीन ते जुने)
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            records.forEach((record, index) => {
+                const row = document.createElement('tr');
+                
+                if (record.type === 'expense') {
+                    row.innerHTML = `
+                        <td>${record.date}</td>
+                        <td>खर्च</td>
+                        <td>${record.item} (${record.persons}) - ${record.notes || '-'}</td>
+                        <td>₹${record.price}</td>
+                        <td>-</td>
+                        <td><button class="delete-btn" onclick="deleteRecord(${index})">हटवा</button></td>
+                    `;
+                } else {
+                    const statusClass = record.returned ? 'status-returned' : 'status-pending';
+                    const statusText = record.returned ? 'परत केले' : 'बाकी';
+                    
+                    row.innerHTML = `
+                        <td>${record.date}</td>
+                        <td>${record.loanType === 'दिले' ? 'उधार दिले' : 'कर्ज घेतले'}</td>
+                        <td>${record.person} - ${record.item || '-'} (${record.notes || '-'})</td>
+                        <td>₹${record.amount}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteRecord(${index})">हटवा</button>
+                            ${!record.returned ? `<button class="return-btn" onclick="markAsReturned(${index})">परत केले</button>` : ''}
+                        </td>
+                    `;
+                }
+                
+                recordsList.appendChild(row);
+            });
+        }
+        
+        // फिल्टर क्लिअर करा
+        function clearFilter() {
+            document.getElementById('record-type').value = 'all';
+            document.getElementById('filter-date').value = '';
+            filterRecords();
+        }
+        
+        // नोंद हटवा
+        function deleteRecord(index) {
+            if (confirm('तुम्हाला ही नोंद नक्की हटवायची आहे?')) {
+                let records = JSON.parse(localStorage.getItem('records')) || [];
+                records.splice(index, 1);
+                localStorage.setItem('records', JSON.stringify(records));
+                
+                filterRecords();
+                updateSummary();
+            }
+        }
+        
+        // उधार/कर्ज परत केले म्हणून चिन्हांकित करा
+        function markAsReturned(index) {
+            let records = JSON.parse(localStorage.getItem('records')) || [];
+            if (records[index].type === 'loan') {
+                records[index].returned = true;
+                localStorage.setItem('records', JSON.stringify(records));
+                
+                filterRecords();
+                updateSummary();
+            }
+        }
+        
+        // सारांश अपडेट करा
+        function updateSummary() {
+            const records = JSON.parse(localStorage.getItem('records')) || [];
+            const today = new Date().toISOString().split('T')[0];
+            
+            // आजचा एकूण खर्च
+            const todayExpenses = records
+                .filter(record => record.type === 'expense' && record.date === today)
+                .reduce((sum, record) => sum + parseFloat(record.price), 0);
+            
+            document.getElementById('today-total').textContent = todayExpenses.toFixed(2);
+            
+            // व्यक्तीनुसार खर्च
+            const personSummary = {};
+            records
+                .filter(record => record.type === 'expense')
+                .forEach(record => {
+                    const persons = record.persons.split(',').map(p => p.trim());
+                    persons.forEach(person => {
+                        if (personSummary[person]) {
+                            personSummary[person] += parseFloat(record.price) / persons.length;
+                        } else {
+                            personSummary[person] = parseFloat(record.price) / persons.length;
+                        }
+                    });
+                });
+            
+            const personList = document.getElementById('person-list');
+            personList.innerHTML = '';
+            for (const person in personSummary) {
+                const li = document.createElement('li');
+                li.textContent = `${person}: ₹${personSummary[person].toFixed(2)}`;
+                personList.appendChild(li);
+            }
+            
+            // उधार/कर्ज सारांश
+            const givenLoans = records
+                .filter(record => record.type === 'loan' && record.loanType === 'दिले' && !record.returned)
+                .reduce((sum, record) => sum + parseFloat(record.amount), 0);
+            
+            const takenLoans = records
+                .filter(record => record.type === 'loan' && record.loanType === 'घेतले' && !record.returned)
+                .reduce((sum, record) => sum + parseFloat(record.amount), 0);
+            
+            document.getElementById('given-loans-total').textContent = givenLoans.toFixed(2);
+            document.getElementById('taken-loans-total').textContent = takenLoans.toFixed(2);
+        }
+    </script>
+</body>
+</html>
